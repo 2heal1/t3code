@@ -71,3 +71,15 @@ export function resolveModelShortName(
   const families = driverKind ? providerClients.get(driverKind)?.modelFamilies : undefined;
   return modelShortName(model.name, families ?? []);
 }
+
+export function resolveModelSourceLabel(
+  model: { readonly slug: string; readonly subProvider?: string | undefined },
+  driverKind: string | null | undefined,
+  instanceDisplayName: string,
+): string | undefined {
+  const source = model.subProvider?.trim();
+  if (source) return source;
+  if (driverKind !== "codex") return undefined;
+  // Codex gateways qualify routes as source/model; the Codex logo only identifies the harness.
+  return model.slug.match(/^([^/:\s]+)\/[^/].*$/u)?.[1] ?? instanceDisplayName;
+}

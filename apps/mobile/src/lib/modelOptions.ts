@@ -21,7 +21,10 @@ import {
   buildExplicitProviderOptionSelectionsFromDescriptors,
   getProviderOptionDescriptors,
 } from "@t3tools/shared/model";
-import { resolveModelShortName } from "@t3tools/client-runtime/provider-clients";
+import {
+  resolveModelShortName,
+  resolveModelSourceLabel,
+} from "@t3tools/client-runtime/provider-clients";
 import { resolveProvidersForCwd } from "@t3tools/client-runtime/providerSkills";
 
 export type ModelOption = {
@@ -379,7 +382,7 @@ export function buildModelOptions(
         key,
         label: model.name,
         ...(shortName ? { shortName } : {}),
-        subtitle: model.subProvider ?? "",
+        subtitle: resolveModelSourceLabel(model, provider.driver, providerLabel) ?? "",
         providerKey: provider.instanceId,
         providerLabel,
         providerDriver: provider.driver,
@@ -448,7 +451,12 @@ export function buildModelOptions(
         key,
         label: model?.name ?? fallbackModelSelection.model,
         ...(shortName ? { shortName } : {}),
-        subtitle: model?.subProvider ?? "",
+        subtitle:
+          resolveModelSourceLabel(
+            model ?? { slug: fallbackModelSelection.model },
+            providerDriver,
+            providerLabel,
+          ) ?? "",
         providerKey: fallbackModelSelection.instanceId,
         providerLabel,
         providerDriver,

@@ -16,6 +16,7 @@ export const ModelListRow = memo(function ModelListRow(props: {
   slug: string;
   name: string;
   subProvider?: string | undefined;
+  sourceLabel?: string | undefined;
   instanceId: ProviderInstanceId;
   driverKind: ProviderDriverKind;
   providerDisplayName: string;
@@ -53,7 +54,6 @@ export const ModelListRow = memo(function ModelListRow(props: {
           "data-disabled:pointer-events-auto data-disabled:cursor-not-allowed",
       )}
     >
-      {/* One row shape in every tab: the logo names the provider, so Favorites needs no second line. */}
       <ProviderInstanceIcon
         driverKind={props.driverKind}
         displayName={props.providerDisplayName}
@@ -80,10 +80,15 @@ export const ModelListRow = memo(function ModelListRow(props: {
           <span className="sr-only">, {props.providerDisplayName}</span>
         </div>
         {props.isSelected ? <CheckIcon className="size-3.5 shrink-0" aria-hidden="true" /> : null}
-        {props.subProvider ? (
-          <span className="min-w-0 shrink truncate text-xs text-muted-foreground/70">
-            {props.subProvider}
-          </span>
+        {props.sourceLabel ? (
+          <Tooltip>
+            <TooltipTrigger
+              render={<span className="max-w-32 shrink-0 truncate text-xs text-muted-foreground" />}
+            >
+              {props.sourceLabel}
+            </TooltipTrigger>
+            <TooltipPopup>Model source: {props.sourceLabel}</TooltipPopup>
+          </Tooltip>
         ) : null}
         {props.showNewBadge ? (
           <span

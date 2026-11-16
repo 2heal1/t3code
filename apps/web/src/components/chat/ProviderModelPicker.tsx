@@ -6,6 +6,7 @@ import {
   type ResolvedKeybindingsConfig,
 } from "@t3tools/contracts";
 import { RegistryContext } from "@effect/atom-react";
+import { resolveModelSourceLabel } from "@t3tools/client-runtime/provider-clients";
 import {
   createContext,
   memo,
@@ -175,6 +176,13 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
   const triggerLabel = selectedModel
     ? `${getDisplayModelName(selectedModel)}${selectedModel.isUnavailable ? " (Unavailable)" : ""}`
     : triggerTitle;
+  const sourceLabel = activeEntry
+    ? resolveModelSourceLabel(
+        selectedModel ?? { slug: props.model },
+        activeEntry.driverKind,
+        activeEntry.displayName,
+      )
+    : undefined;
   const showInstanceBadge =
     activeEntry !== null && shouldShowInstanceBadge(activeEntry, props.instanceEntries);
 
@@ -239,13 +247,22 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
       options: props.modelOptionsByInstance.get(selection.instanceId) ?? [],
     });
     const unavailable = model?.isUnavailable ? " (Unavailable)" : "";
+    const source = entry
+      ? resolveModelSourceLabel(
+          model ?? { slug: selection.model },
+          entry.driverKind,
+          entry.displayName,
+        )
+      : undefined;
+    const label = model
+      ? `${getTriggerDisplayModelName(model, entry?.driverKind)}${unavailable}`
+      : selection.model;
+    const fullLabel = model ? `${getDisplayModelName(model)}${unavailable}` : selection.model;
     return {
       ...selection,
       entry,
-      label: model
-        ? `${getTriggerDisplayModelName(model, entry?.driverKind)}${unavailable}`
-        : selection.model,
-      fullLabel: model ? `${getDisplayModelName(model)}${unavailable}` : selection.model,
+      label: source ? `${source} · ${label}` : label,
+      fullLabel: source ? `${source} · ${fullLabel}` : fullLabel,
     };
   });
   const multipleLabel = selectedEntries
@@ -261,6 +278,7 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
     : undefined;
   const triggerTooltipContent = [
     props.triggerLabel ?? allModelNames ?? triggerLabel,
+    props.triggerLabel === undefined && !selectedEntries ? sourceLabel : undefined,
     props.triggerDetail,
     shortcutLabel,
   ]
@@ -340,6 +358,11 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
             ref={triggerRef}
             aria-label={[
               props.triggerAriaLabel ?? props.triggerLabel ?? allModelNames ?? triggerLabel,
+              props.triggerAriaLabel === undefined &&
+              props.triggerLabel === undefined &&
+              !selectedEntries
+                ? sourceLabel
+                : undefined,
               props.triggerDetail,
             ]
               .filter(Boolean)
@@ -418,6 +441,21 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
                 )}
               />
             </span>
+          ) : null}
+          {sourceLabel && !selectedEntries && props.triggerLabel === undefined ? (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <span
+                    className="max-w-24 shrink-0 truncate text-xs text-muted-foreground"
+                    data-model-source
+                  />
+                }
+              >
+                {sourceLabel}
+              </TooltipTrigger>
+              <TooltipPopup>Model source: {sourceLabel}</TooltipPopup>
+            </Tooltip>
           ) : null}
           {props.isComposerOwned ? (
             <span {...triggerTextProps}>{triggerText}</span>

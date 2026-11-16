@@ -15,6 +15,70 @@ import { __setClientSettingsForTests } from "../../hooks/useSettings";
 import { deriveProviderInstanceEntries } from "../../providerInstances";
 import { ProviderModelPicker } from "./ProviderModelPicker";
 
+it("selects same-name Codex models by source and keeps the selected route visible", async () => {
+  const instanceId = ProviderInstanceId.make("codex");
+  const models = ["gpt-test", "trae-internal/gpt-test"].map((slug) => ({
+    slug,
+    name: "GPT Test",
+    isCustom: false,
+    capabilities: {},
+  }));
+  const entries = deriveProviderInstanceEntries([
+    {
+      instanceId,
+      driver: ProviderDriverKind.make("codex"),
+      enabled: true,
+      installed: true,
+      version: null,
+      status: "ready",
+      auth: { status: "authenticated" },
+      checkedAt: "2026-01-01T00:00:00.000Z",
+      models,
+      slashCommands: [],
+      skills: [],
+    },
+  ]);
+  const options = new Map([[instanceId, models]]);
+  const onSelect = vi.fn();
+  function Picker() {
+    const [model, setModel] = useState("gpt-test");
+    return (
+      <ProviderModelPicker
+        environmentId={null}
+        activeInstanceId={instanceId}
+        model={model}
+        lockedProvider={null}
+        instanceEntries={entries}
+        modelOptionsByInstance={options}
+        triggerAriaLabel="Choose model"
+        onInstanceModelChange={(selectedInstanceId, selected) => {
+          onSelect(selectedInstanceId, selected);
+          setModel(selected);
+        }}
+      />
+    );
+  }
+
+  await using screen = await render(<Picker />);
+  const trigger = screen.getByRole("button", { name: "Choose model" });
+  await trigger.click();
+  await page.getByRole("button", { name: "Codex", exact: true }).click();
+  await expect.element(page.getByRole("option", { name: /GPT Test.*trae-internal/ })).toBeVisible();
+  await page.getByPlaceholder("Search models...").fill("trae-internal");
+  await vi.waitFor(() => expect(page.getByRole("option").all()).toHaveLength(1));
+  await page.getByRole("option").click();
+  expect(onSelect).toHaveBeenLastCalledWith(instanceId, "trae-internal/gpt-test");
+  await expect.element(trigger).toMatchTextContent("trae-internal");
+
+  await trigger.click();
+  await page.getByPlaceholder("Search models...").fill("");
+  await page.getByRole("button", { name: "Codex", exact: true }).click();
+  await page.getByRole("option", { name: /^GPT Test\s*, Codex(?!.*trae-internal)/ }).click();
+  expect(onSelect).toHaveBeenLastCalledWith(instanceId, "gpt-test");
+  await expect.element(trigger).toMatchTextContent("Codex");
+  await expect.element(trigger).not.toMatchTextContent("trae-internal");
+});
+
 it("keeps each registry image when adding a model from another ACP agent", async () => {
   const icons = [
     "https://cdn.agentclientprotocol.com/registry/icons/picker-explicit.svg",

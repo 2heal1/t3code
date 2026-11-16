@@ -33,6 +33,7 @@ import {
   parseModelPickerModelKey,
 } from "./modelPickerKeys";
 import { rankModelPickerSearch } from "@t3tools/client-runtime/model-search";
+import { resolveModelSourceLabel } from "@t3tools/client-runtime/provider-clients";
 import {
   Combobox,
   ComboboxEmpty,
@@ -72,6 +73,7 @@ type ModelPickerItem = {
   name: string;
   shortName?: string;
   subProvider?: string;
+  sourceLabel?: string | undefined;
   badge?: "new";
   instanceId: ProviderInstanceId;
   driverKind: ProviderDriverKind;
@@ -568,6 +570,7 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
           name: model.name,
           ...(model.shortName ? { shortName: model.shortName } : {}),
           ...(model.subProvider ? { subProvider: model.subProvider } : {}),
+          sourceLabel: resolveModelSourceLabel(model, entry.driverKind, entry.displayName),
           ...(model.badge ? { badge: model.badge } : {}),
           ...(model.isLegacy ? { isLegacy: true } : {}),
           ...(model.isUnavailable ? { isUnavailable: true } : {}),
@@ -652,7 +655,7 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
       return rankModelPickerSearch(candidates, searchQuery, (model) => ({
         name: model.name,
         ...(model.shortName ? { shortName: model.shortName } : {}),
-        ...(model.subProvider ? { subProvider: model.subProvider } : {}),
+        ...(model.sourceLabel ? { subProvider: model.sourceLabel } : {}),
         driverKind: model.driverKind,
         providerDisplayName: model.instanceDisplayName,
         isFavorite: favoritesSet.has(providerModelKey(model.instanceId, model.slug)),
@@ -1044,6 +1047,7 @@ export const ModelPickerContent = memo(function ModelPickerContent(props: {
                     slug={model.slug}
                     name={model.name}
                     subProvider={model.subProvider}
+                    sourceLabel={model.sourceLabel}
                     instanceId={model.instanceId}
                     driverKind={model.driverKind}
                     providerDisplayName={model.instanceDisplayName}

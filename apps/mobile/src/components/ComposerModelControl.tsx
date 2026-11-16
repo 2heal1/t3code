@@ -46,11 +46,14 @@ export function ComposerModelControl(props: {
       })
     : null;
   const shortLabel = props.modelOption?.shortName ?? label;
+  const sourceLabel = props.modelOption?.subtitle;
+  const modelLabel = sourceLabel ? `${sourceLabel} · ${shortLabel}` : shortLabel;
   return (
     <ComposerInlineControl
       accessibilityLabel={[
         "Model and reasoning settings",
         label,
+        sourceLabel,
         badge?.showBadge ? badge.displayName : null,
         summary,
       ]
@@ -78,7 +81,7 @@ export function ComposerModelControl(props: {
           />
         )
       }
-      label={providerNameLabel ?? shortLabel}
+      label={providerNameLabel ?? modelLabel}
       labelEllipsizeMode={providerNameLabel ? "middle" : undefined}
       iconOnly={props.iconOnly}
       suffixWidth={providerNameLabel ? 96 : undefined}
@@ -92,7 +95,7 @@ export function ComposerModelControl(props: {
             }
             numberOfLines={1}
           >
-            {shortLabel}
+            {modelLabel}
             {summary ? ` · ${summary}` : ""}
           </Text>
         ) : summary ? (
